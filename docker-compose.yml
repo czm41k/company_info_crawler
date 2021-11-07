@@ -1,14 +1,12 @@
 version: '3'
 services:
   master:
-    environment: 
-      - "LOCUST_HOST=${LOCUST_HOST}"
     image: locustio/locust
     ports:
      - "8089:8089"
     volumes:
       - ./:/mnt/locust
-    command: -f /mnt/locust/locustfile.py --master -H https://www.exness-trade.pro --headless -u 1000  -r 100 --run-time 5s --csv=$LOCUST_HOST 
+    command: "-f /mnt/locust/locustfile.py -H $HOST --master --headless -u 1000  -r 100 --run-time 5s"
 
   worker:
     deploy:
@@ -16,4 +14,4 @@ services:
     image: locustio/locust
     volumes:
       - ./:/mnt/locust
-    command: -f /mnt/locust/locustfile.py --worker --master-host master --csv=$LOCUST_HOST 
+    command: "-f /mnt/locust/locustfile.py --worker --master-host master --csv=/mnt/locust/$HOST"
