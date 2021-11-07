@@ -1,4 +1,5 @@
 import csv
+import subprocess
 from collections.abc import Sequence
 import json
 from warnings import catch_warnings
@@ -10,11 +11,7 @@ import urllib.error
 import dns.resolver
 from urllib.request import urlopen
 from googlesearch import search
-from locust import HttpUser, SequentialTaskSet, task, between
-from locust.env import Environment
-from locust.stats import stats_printer, stats_history
-from locust.log import setup_logging
-from http.client import error
+
 
 
 def to_csv(d: dict, output: str) -> None:
@@ -79,60 +76,14 @@ def get_geo(ips: list, name: str) -> dict:
   return {name: results}
 
 
-# def check_site_performance(d: dict) -> dict:
-#   for domain in d:
-#     r = load_test(domain,ui=True)
-#     d[domain]['tech_attributes'] = r
-
-
-
-def load_test(summary: dict, host_header: str, ui: bool, users:int=1, time:int()=60) -> dict:
+def load_test(summary: dict, users:int=1000, time:int()=15) -> dict:
   for domain in summary:
     print(f"DOMAIN NOW {domain}")
-    # for ip in domain:
-    target_host = f"https://{domain}"
-    env = Environment(user_classes=[User],host=target_host)
-    env.create_local_runner()
-    if ui:
-      env.create_web_ui('127.0.0.1', 8089)
-    gevent.spawn(stats_printer(env.stats))
-    gevent.spawn(stats_history, env.runner)
-    # start the test
-    env.runner.start(1,1,wait=True)
-    gevent.spawn_later(10, lambda: env.runner.quit())
-    env.runner.greenlet.join()
-    if ui:
-      env.web_ui.stop()
-    # print(f"{stats_history=}")
-    print(f"{env.runner.environment=}")
-      
-
-
-# class MyEnv(Environment):
-
-
-# class UserBehaviour(SequentialTaskSet):
-#   def on_start(self):
-#     self.client.verify = True
-
-#   @task
-#   def my_task(self):
-#       with self.client.get("/") as get_resp:
-#         # print(f"{get_resp.headers=}")
-#         print(get_resp)
-#         # print(get_resp.text)
-#         print(get_resp.url)
-
-
-# class User(HttpUser):
-#   tasks = [UserBehaviour]
-#   wait_time = between(1,2)
-
-#   # def __init__(self, *args, **kwargs):
-#   #   HttpUser.__init__(self, *args, **kwargs)
-#   #   if 'host-header' in kwargs:
-#   #     self.host_header = kwargs['host_header']
-
+    test = subprocess.Popen(f"DOMAIN={domain}  WORKERS=3 TIME={time} USERS={users} RATE={users // 4} docker-compose up",
+      check=True, stdout=subprocess.PIPE, universal_newlines=True, shell=True)
+    test_result = test.stdout
+    test.wait()
+    print(f"Finished for {domain} with results \n{test_result=}")
 
 
 
@@ -146,6 +97,5 @@ if __name__ == "__main__":
     print(row)
     summary = get_geo(endpoints[row],row)
     print(f"{summary=}")
-    load_test(summary, host_header, ui=True, users=5,time=30)
-  # for cip in custom_ips:
+    load_test(summary,users=5,time=30)
 
