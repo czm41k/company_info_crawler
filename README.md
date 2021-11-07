@@ -25,4 +25,4 @@ A python script with all dependencies installed
 
 ## Docker-compose exmaple
 
-`DOMAIN=domain HOST=https://$DOMAIN  docker-compose up`
+`DOMAIN=domain WORKERS=<num of workers>  docker-compose up`
