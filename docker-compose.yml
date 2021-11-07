@@ -6,7 +6,7 @@ services:
      - "8089:8089"
     volumes:
       - ./:/mnt/locust
-    command: "-f /mnt/locust/locustfile.py -H $HOST --master --headless -u 1000  -r 100 --run-time 5s"
+    command: "-f /mnt/locust/locustfile.py -H $HOST --master --headless -u 1000  -r 100 --run-time 5s --html=/mnt/locust/$DOMAIN.html"
 
   worker:
     deploy:
@@ -14,4 +14,4 @@ services:
     image: locustio/locust
     volumes:
       - ./:/mnt/locust
-    command: "-f /mnt/locust/locustfile.py --worker --master-host master --csv=/mnt/locust/$HOST"
+    command: "-f /mnt/locust/locustfile.py --worker --master-host master "

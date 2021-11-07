@@ -22,3 +22,7 @@ A python script with all dependencies installed
 ## TODO List
 
 1. Increase performance by implementing async API calls
+
+## Docker-compose exmaple
+
+`DOMAIN=domain HOST=https://$DOMAIN  docker-compose up`
