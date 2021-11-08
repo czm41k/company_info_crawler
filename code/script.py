@@ -3,9 +3,11 @@ import os
 import argparse
 import json
 import dns.resolver
+import dns.exception
 import urllib.error
 from urllib.request import urlopen
 from googlesearch import search
+from typing import Union
 
 
 def get_domains(site_name: str, depth: int, pause: int) -> set:
@@ -49,14 +51,18 @@ class CompanyInstance():
     return f"domain is {self.domain.upper()}\n IPv4s are: {self.ipv4s}\n Corresponding geo is:\n {self.geo}\n Load test results available at {self.report_link}"
 
 
-  def _get_endpoints(self, domain: str) -> list:
+  def _get_endpoints(self, domain: str) -> Union[list,None]:
     """Resolving provided list of domains to theirA records
     Returns a dict with list of IPv4 for each domain given
     """
     ips = []
-    for rdata in dns.resolver.resolve(domain,'A'):
-      ips.append(str(rdata))
-    return ips
+    try:
+      for rdata in dns.resolver.resolve(domain,'A'):
+        ips.append(str(rdata))
+      return ips
+    except dns.exception.Timeout as e:
+      print(f"Failed to determine IPs using default ")
+      return None
 
 
   def _get_geo(self) -> dict:
@@ -98,8 +104,8 @@ def execute(cmd):
         yield stdout_line 
     popen.stdout.close()
     return_code = popen.wait()
-    if return_code:
-        raise subprocess.CalledProcessError(return_code, cmd)
+    # if return_code:
+    #     raise subprocess.CalledProcessError(return_code, cmd)
 
 
 if __name__ == "__main__":
