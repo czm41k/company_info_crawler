@@ -1,4 +1,4 @@
-from subprocess import call,PIPE,CalledProcessError
+from subprocess import call,PIPE,CalledProcessError, Popen
 import os
 import argparse
 import json
@@ -81,10 +81,24 @@ class CompanyInstance():
     spawning_rate = self.args.load_users // 4 if self.args.load_users > 100 else self.args.load_users
     cmd = f"cd code && DOMAIN={self.domain} WORKERS=3 TIME={self.args.load_time} USERS={self.args.load_users} RATE={spawning_rate} docker-compose up"
     print(f"DOMAIN NOW {self.domain}. Running load test within \n {cmd=}")
-    test = call(cmd,stdout=PIPE, universal_newlines=True, shell=True, timeout=self.args.load_time*2)
-    # print('waiting')
-    print(f"Finished for {self.domain} with exit code {test.wait()}, all stats generated to {self.domain}.html report locally")
-    self.report_link = f"{os. getcwd()}/{self.domain}.html"
+    # test = call(cmd,stdout=PIPE, universal_newlines=True, shell=True, timeout=self.args.load_time*2)
+    # # print('waiting')
+    # print(f"Finished for {self.domain} with exit code {test.wait()}, all stats generated to {self.domain}.html report locally")
+    # self.report_link = f"{os. getcwd()}/{self.domain}.html"
+    test = Popen(cmd,stdout=PIPE, universal_newlines=True, shell=True)
+    test_result = test.stdout
+    test.wait()
+    print(f"Finished for {domain} with results \n{test_result=}")
+
+
+# def load_test(summary: dict, users:int=1000, time:int()=15) -> dict:
+#   for domain in summary:
+#     print(f"DOMAIN NOW {domain}")
+#     test = Popen(f"DOMAIN={domain}  WORKERS=3 TIME={time} USERS={users} RATE={users // 4} docker-compose up",
+#       check=True, stdout=PIPE, universal_newlines=True, shell=True)
+#     test_result = test.stdout
+#     test.wait()
+#     print(f"Finished for {domain} with results \n{test_result=}")
 
 
 if __name__ == "__main__":
