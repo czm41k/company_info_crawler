@@ -31,6 +31,8 @@ def get_domains(site_name: str, depth: int, pause: int) -> set:
 
 def parse_args() -> dict:
   parser = argparse.ArgumentParser(description=f"Web crawler. Gather all INFO on provided domain")
+
+  parser.add_argument('-c', '--company', action='store', dest='company', type=str, default='exness', help='Name of company to gather info')
   parser.add_argument('-u', action='store', dest='load_users', type=int, default=1000, help='Count of users for Locust load testing')
   parser.add_argument('-t', action='store', dest='load_time', type=int, default=15, help="Time in seconds to run Locust load test")
   parser.add_argument('-d', action='store', dest='google_depth', type=int, default=10, help="Depth of search for domain matches (Googling depth)")
@@ -88,7 +90,9 @@ class CompanyInstance():
       return None
 
 
-def load_test(domain,users_count,test_length) -> str:
+def load_test(domain: str,users_count: int,test_length: int) -> str:
+  """Performs load testing using Locust tool 
+  Launched within docker-compose"""
   print("Starting load test")
   spawning_rate = users_count // 4 if users_count > 100 else users_count
   cmd = f"cd code && DOMAIN={domain} WORKERS=3 TIME={test_length} USERS={users_count} RATE={spawning_rate} docker-compose up"
@@ -112,7 +116,7 @@ def execute(cmd):
 def main():
   args = parse_args()
   instances = []
-  domains = get_domains('exness',args.google_depth,args.google_timeout)
+  domains = get_domains(args.company,args.google_depth,args.google_timeout)
   for domain in domains:
     instance = CompanyInstance(domain)
     instance.report_link = load_test(domain, args.load_users, args.load_time)
