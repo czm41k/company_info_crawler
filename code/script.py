@@ -1,13 +1,6 @@
-import csv
-import subprocess
-from collections.abc import Sequence
+from subprocess import Popen,PIPE,CalledProcessError
+import argparse
 import json
-from warnings import catch_warnings
-import gevent
-from gevent.events import IPeriodicMonitorThread
-import gevent.monkey
-gevent.monkey.patch_all() # needed due to https://github.com/gevent/gevent/issues/1016 and causing recursion error for ssl endpoints
-import urllib.error
 import dns.resolver
 from urllib.request import urlopen
 from googlesearch import search
@@ -40,62 +33,74 @@ def get_domains(site_name: str, depth: int, pause: int) -> set:
   return results
 
 
-def get_endpoints(domains: set) -> dict:
-  """Resolving provided list of domains to theirA records
-  Returns a dict with list of IPv4 for each domain given
-  """
-  endpoints = {}
-  for site in domains:
+class CompanyInstance():
+  def __init__(self, domain):
+    self.domain = domain
+    self.args = self._parse_args(self)
+
+  def _parse_args(self) -> dict:
+        parser = argparse.ArgumentParser(description=f"Web crawler. Gather all INFO on provided domain")
+        parser.add_argument('-c','--company', action='store', dest='company', type=str, help='Domain to look at')
+        parser.add_argument('-u', action='store', dest='load_users', type=int, default=1000, help='Count of users for Locust load testing')
+        parser.add_argument('-t', action='store', dest='load_time', type=int, default=15, help="Time in seconds to run Locust load test")
+        args = parser.parse_args()
+        return args
+
+  def find_all(self) -> None:
+    self.ipv4s = self._get_endpoints(self.domain)
+    self.geo = self._get_geo(self)
+    self._load_test(self)
+
+
+  def _get_endpoints(self, domain: str) -> list:
+    """Resolving provided list of domains to theirA records
+    Returns a dict with list of IPv4 for each domain given
+    """
     ips = []
-    for rdata in dns.resolver.resolve(site,'A'):
+    for rdata in dns.resolver.resolve(domain,'A'):
       ips.append(str(rdata))
-    endpoints[site] = ips
-  return endpoints
+    return ips
 
 
-def get_geo(ips: list, name: str) -> dict:
-  """Gets incoming list of IPv4s
-  Returns geo information for each of them in dict
-  """
-  results = {}
-  for ip in ips:
-    result= {}
-    print(ip)
-    url = f"http://ipinfo.io/{ip}/json"
-    response = urlopen(url)
-    data = json.load(response)
-    # result['ip'] = data['ip']
-    result = {
-      'org': data['org'],
-      'city': data['city'],
-      'country': data['country'],
-      'region': data['region']
-      }
-    results[ip]=result
-    # print(f"{data['ip']=} {data['region']=} {data['country']=} {data['city']=} {data['org']=}")
-  return {name: results}
+  def _get_geo(self) -> dict:
+    """Gets incoming list of IPv4s
+    Returns geo information for each of them in dict
+    """
+    results = {}
+    for ip in self.ipv4s:
+      result= {}
+      # print(ip)
+      url = f"http://ipinfo.io/{ip}/json"
+      response = urlopen(url)
+      data = json.load(response)
+      result = {
+        'org': data['org'],
+        'city': data['city'],
+        'country': data['country'],
+        'region': data['region']
+        }
+      results[ip]=result
+    return results
 
 
-def load_test(summary: dict, users:int=1000, time:int()=15) -> dict:
-  for domain in summary:
-    print(f"DOMAIN NOW {domain}")
-    test = subprocess.Popen(f"DOMAIN={domain}  WORKERS=3 TIME={time} USERS={users} RATE={users // 4} docker-compose up",
-      check=True, stdout=subprocess.PIPE, universal_newlines=True, shell=True)
-    test_result = test.stdout
-    test.wait()
-    print(f"Finished for {domain} with results \n{test_result=}")
-
+  def _load_test(self) -> dict:
+    # subprocess.call('pwd')
+    spawning_rate = self.args.load_users // 4 if self.args.load_users > 100 else self.args.load_users
+    cmd = f"cd code && DOMAIN={self.domain}  WORKERS=3 TIME={self.args.load_time} USERS={self.args.load_users} RATE={spawning_rate} docker-compose up"
+    print(f"DOMAIN NOW {self.domain}. Running load test within \n {cmd=}")
+    test = Popen(cmd,stdout=PIPE, universal_newlines=True, shell=True)
+    for stdout_line in iter(Popen.stdout.readline, ""):
+        yield stdout_line 
+    Popen.stdout.close()
+    exit_code = test.wait()
+    if exit_code:
+      raise CalledProcessError(exit_code)
+    print(f"Finished for {self.domain}, all stats generated to {self.domain}.html report locally")
 
 
 if __name__ == "__main__":
   domains = get_domains('exness',10,5)
-  print(f"{domains=}")
-  endpoints = get_endpoints(domains)
-  host_header = str()
-  print(f"{endpoints=}")
-  for row in endpoints:
-    print(row)
-    summary = get_geo(endpoints[row],row)
-    print(f"{summary=}")
-    load_test(summary,users=5,time=30)
+  for domain in domains:
+    instance = CompanyInstance(domain)
+    instance.find_all()
 
