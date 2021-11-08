@@ -1,4 +1,4 @@
-from subprocess import call,PIPE,CalledProcessError, Popen
+import subprocess
 import os
 import argparse
 import json
@@ -27,20 +27,23 @@ def get_domains(site_name: str, depth: int, pause: int) -> set:
   return results
 
 
+def parse_args() -> dict:
+  parser = argparse.ArgumentParser(description=f"Web crawler. Gather all INFO on provided domain")
+  parser.add_argument('-u', action='store', dest='load_users', type=int, default=1000, help='Count of users for Locust load testing')
+  parser.add_argument('-t', action='store', dest='load_time', type=int, default=15, help="Time in seconds to run Locust load test")
+  parser.add_argument('-d', action='store', dest='google_depth', type=int, default=10, help="Depth of search for domain matches (Googling depth)")
+  parser.add_argument('-gt', '--googling-timeout', action='store', dest='google_timeout', type=int, default=5, help="Time (in secs) between 2 consequent google API requests")
+  args = parser.parse_args()
+  return args
+
+
 class CompanyInstance():
   def __init__(self, domain):
     self.domain = domain
-    self.args = self._parse_args()
     self.ipv4s = self._get_endpoints(self.domain)
     self.geo = self._get_geo()
-    self._load_test()
+    self.report_link = str()
 
-  def _parse_args(self) -> dict:
-        parser = argparse.ArgumentParser(description=f"Web crawler. Gather all INFO on provided domain")
-        parser.add_argument('-u', action='store', dest='load_users', type=int, default=1000, help='Count of users for Locust load testing')
-        parser.add_argument('-t', action='store', dest='load_time', type=int, default=15, help="Time in seconds to run Locust load test")
-        args = parser.parse_args()
-        return args
 
   def __str__(self) -> None:
     return f"domain is {self.domain.upper()}\n IPv4s are: {self.ipv4s}\n Corresponding geo is:\n {self.geo}\n Load test results available at {self.report_link}"
@@ -76,33 +79,36 @@ class CompanyInstance():
     return results
 
 
-  def _load_test(self) -> dict:
-    print("Starting load test")
-    spawning_rate = self.args.load_users // 4 if self.args.load_users > 100 else self.args.load_users
-    cmd = f"cd code && DOMAIN={self.domain} WORKERS=3 TIME={self.args.load_time} USERS={self.args.load_users} RATE={spawning_rate} docker-compose up"
-    print(f"DOMAIN NOW {self.domain}. Running load test within \n {cmd=}")
-    # test = call(cmd,stdout=PIPE, universal_newlines=True, shell=True, timeout=self.args.load_time*2)
-    # # print('waiting')
-    # print(f"Finished for {self.domain} with exit code {test.wait()}, all stats generated to {self.domain}.html report locally")
-    # self.report_link = f"{os. getcwd()}/{self.domain}.html"
-    test = Popen(cmd,stdout=PIPE, universal_newlines=True, shell=True)
-    test_result = test.stdout
-    test.wait()
-    print(f"Finished for {domain} with results \n{test_result=}")
+def load_test(domain,users_count,test_length) -> str:
+  print("Starting load test")
+  spawning_rate = users_count // 4 if users_count > 100 else users_count
+  cmd = f"cd code && DOMAIN={domain} WORKERS=3 TIME={test_length} USERS={users_count} RATE={spawning_rate} docker-compose up"
+  print(f"DOMAIN NOW {domain}. Running load test within \n {cmd=}")
+  # Executing load test in separate process
+  for path in execute(cmd):
+    print(path,end="")
+
+  print(f"Finished for {domain}")
+  return f"{os. getcwd()}/{domain}.html"
 
 
-# def load_test(summary: dict, users:int=1000, time:int()=15) -> dict:
-#   for domain in summary:
-#     print(f"DOMAIN NOW {domain}")
-#     test = Popen(f"DOMAIN={domain}  WORKERS=3 TIME={time} USERS={users} RATE={users // 4} docker-compose up",
-#       check=True, stdout=PIPE, universal_newlines=True, shell=True)
-#     test_result = test.stdout
-#     test.wait()
-#     print(f"Finished for {domain} with results \n{test_result=}")
+def execute(cmd):
+    popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True,shell=True)
+    for stdout_line in iter(popen.stdout.readline, ""):
+        yield stdout_line 
+    popen.stdout.close()
+    return_code = popen.wait()
+    if return_code:
+        raise subprocess.CalledProcessError(return_code, cmd)
 
 
 if __name__ == "__main__":
-  domains = get_domains('exness',10,5)
+  args = parse_args()
+  instances = []
+  domains = get_domains('exness',args.google_depth,args.google_timeout)
   for domain in domains:
     instance = CompanyInstance(domain)
-    print(instance)
+    instance.report_link = load_test(domain, args.load_users, args.load_time)
+    instances.append(instance)
+
+  print("\n".join([print(i) for i in instances]))
