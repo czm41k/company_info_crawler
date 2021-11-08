@@ -3,7 +3,7 @@ import os
 import argparse
 import json
 import dns.resolver
-from urllib.error import HTTPError
+import urllib.error
 from urllib.request import urlopen
 from googlesearch import search
 
