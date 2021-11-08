@@ -1,4 +1,5 @@
 from subprocess import Popen,PIPE,CalledProcessError
+import os
 import argparse
 import json
 import dns.resolver
@@ -96,6 +97,7 @@ class CompanyInstance():
     if exit_code:
       raise CalledProcessError(exit_code)
     print(f"Finished for {self.domain}, all stats generated to {self.domain}.html report locally")
+    self.report_link = f"{os. getcwd()}/{self.domain}.html"
 
 
 if __name__ == "__main__":
@@ -103,4 +105,4 @@ if __name__ == "__main__":
   for domain in domains:
     instance = CompanyInstance(domain)
     instance.find_all()
-
+    print(f"domain is {instance.domain.upper()}\n IPv4s are: {instance.ipv4s}\n Corresponding geo is:\n {instance.geo}\n Load test results available at {instance.report_link}")
