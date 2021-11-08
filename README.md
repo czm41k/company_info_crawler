@@ -1,28 +1,31 @@
-# README
+# Company INFO Crawler
 
 ## TLDR
 
-Build your own image or use **TODO link to my image** mine. Specify comma separated list of domains you are interested in and enjoy results in csv
-
-Example:
-```sh
-docker run -it <your image>
-```
+Python script that does following:
+1. Google-s provided company name to gather lsit of domains owned by company
+1. Resolves the domain list to specific IPv4s
+1. Grabs GEO info on IPv4s
+1. Performs load_testing of each domain within locust launched via docker-compose (to increase load numbers)
+    - The simplest scenario of getting a homepage is used
 
 ## Requirements
 
-- Internet access
-- Docker installed
+1. Internet access
+1/ Docker installed
 
-## Docker Content
+## Possible options
 
-A python script with all dependencies installed
+Use embeded helper in script to see posible options for parametrization.
 
+> Every option has it's default value, so script can be run jsut by `python3 script.py`
+
+## Run docker-compose by hand
+
+`DOMAIN=domain WORKERS=<num of workers>  TIME=<seconds> USERS=<num of users for load testing> RATE=<users spawning rate for load testing> docker-compose up`
 
 ## TODO List
 
 1. Increase performance by implementing async API calls
-
-## Docker-compose exmaple
-
-`DOMAIN=domain WORKERS=<num of workers>  TIME=<seconds> docker-compose up`
+1. EXpose Locust UI if needed
+1. Workaround DNS temporary issues

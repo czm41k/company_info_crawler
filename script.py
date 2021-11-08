@@ -95,7 +95,7 @@ def load_test(domain: str,users_count: int,test_length: int) -> str:
   Launched within docker-compose"""
   print("Starting load test")
   spawning_rate = users_count // 4 if users_count > 100 else users_count
-  cmd = f"cd code && DOMAIN={domain} WORKERS=3 TIME={test_length} USERS={users_count} RATE={spawning_rate} docker-compose up"
+  cmd = f"DOMAIN={domain} WORKERS=3 TIME={test_length} USERS={users_count} RATE={spawning_rate} docker-compose up"
   print(f"DOMAIN NOW {domain}. Running load test within \n {cmd=}")
   # Executing load test in separate process
   for path in execute(cmd):
