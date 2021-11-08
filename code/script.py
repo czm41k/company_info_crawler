@@ -3,16 +3,9 @@ import os
 import argparse
 import json
 import dns.resolver
+from urllib.error import HTTPError
 from urllib.request import urlopen
 from googlesearch import search
-
-
-
-def to_csv(d: dict, output: str) -> None:
-  with open(f"{output}.csv",'w') as f:
-    w = csv.DictWriter(f, d.keys())
-    w.writeheader()
-    w.writerow(d)
 
 
 def get_domains(site_name: str, depth: int, pause: int) -> set:
@@ -37,11 +30,10 @@ def get_domains(site_name: str, depth: int, pause: int) -> set:
 class CompanyInstance():
   def __init__(self, domain):
     self.domain = domain
-    self.args = self._parse_args(self)
+    self.args = self._parse_args()
 
   def _parse_args(self) -> dict:
         parser = argparse.ArgumentParser(description=f"Web crawler. Gather all INFO on provided domain")
-        parser.add_argument('-c','--company', action='store', dest='company', type=str, help='Domain to look at')
         parser.add_argument('-u', action='store', dest='load_users', type=int, default=1000, help='Count of users for Locust load testing')
         parser.add_argument('-t', action='store', dest='load_time', type=int, default=15, help="Time in seconds to run Locust load test")
         args = parser.parse_args()
@@ -49,8 +41,8 @@ class CompanyInstance():
 
   def find_all(self) -> None:
     self.ipv4s = self._get_endpoints(self.domain)
-    self.geo = self._get_geo(self)
-    self._load_test(self)
+    self.geo = self._get_geo()
+    self._load_test()
 
 
   def _get_endpoints(self, domain: str) -> list:
