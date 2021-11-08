@@ -48,7 +48,7 @@ class CompanyInstance():
 
 
   def __str__(self) -> None:
-    return f"domain is {self.domain.upper()}\n IPv4s are: {self.ipv4s}\n Corresponding geo is:\n {self.geo}\n Load test results available at {self.report_link}"
+    return f"Domain is {self.domain.upper()}\n IPv4s are: {self.ipv4s}\n Corresponding geo is:\n {self.geo}\n Load test results available at {self.report_link}\n\n"
 
 
   def _get_endpoints(self, domain: str) -> Union[list,None]:
@@ -65,24 +65,27 @@ class CompanyInstance():
       return None
 
 
-  def _get_geo(self) -> dict:
+  def _get_geo(self) -> Union[dict,None]:
     """Gets incoming list of IPv4s
     Returns geo information for each of them in dict
     """
     results = {}
-    for ip in self.ipv4s:
-      result= {}
-      url = f"http://ipinfo.io/{ip}/json"
-      response = urlopen(url)
-      data = json.load(response)
-      result = {
-        'org': data['org'],
-        'city': data['city'],
-        'country': data['country'],
-        'region': data['region']
-        }
-      results[ip]=result
-    return results
+    if isinstance(self.ipv4s,list):
+      for ip in self.ipv4s:
+        result= {}
+        url = f"http://ipinfo.io/{ip}/json"
+        response = urlopen(url)
+        data = json.load(response)
+        result = {
+          'org': data['org'],
+          'city': data['city'],
+          'country': data['country'],
+          'region': data['region']
+          }
+        results[ip]=result
+      return results
+    else:
+      return None
 
 
 def load_test(domain,users_count,test_length) -> str:
@@ -103,12 +106,10 @@ def execute(cmd):
     for stdout_line in iter(popen.stdout.readline, ""):
         yield stdout_line 
     popen.stdout.close()
-    return_code = popen.wait()
-    # if return_code:
-    #     raise subprocess.CalledProcessError(return_code, cmd)
+    popen.wait()
 
 
-if __name__ == "__main__":
+def main():
   args = parse_args()
   instances = []
   domains = get_domains('exness',args.google_depth,args.google_timeout)
@@ -116,5 +117,9 @@ if __name__ == "__main__":
     instance = CompanyInstance(domain)
     instance.report_link = load_test(domain, args.load_users, args.load_time)
     instances.append(instance)
+  [print(i) for i in instances]
+  print(domains)
 
-  print("\n".join([print(i) for i in instances]))
+
+if __name__ == "__main__":
+  main()
