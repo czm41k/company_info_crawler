@@ -8,7 +8,7 @@ services:
 
   worker:
     deploy:
-      replicas: $WORKERS
+      replicas: "${WORKERS}"
     image: locustio/locust
     volumes:
       - ./:/mnt/locust

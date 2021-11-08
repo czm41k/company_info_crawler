@@ -1,4 +1,4 @@
-from subprocess import Popen,PIPE,CalledProcessError
+from subprocess import call,PIPE,CalledProcessError
 import os
 import argparse
 import json
@@ -31,6 +31,9 @@ class CompanyInstance():
   def __init__(self, domain):
     self.domain = domain
     self.args = self._parse_args()
+    self.ipv4s = self._get_endpoints(self.domain)
+    self.geo = self._get_geo()
+    self._load_test()
 
   def _parse_args(self) -> dict:
         parser = argparse.ArgumentParser(description=f"Web crawler. Gather all INFO on provided domain")
@@ -39,10 +42,8 @@ class CompanyInstance():
         args = parser.parse_args()
         return args
 
-  def find_all(self) -> None:
-    self.ipv4s = self._get_endpoints(self.domain)
-    self.geo = self._get_geo()
-    self._load_test()
+  def __str__(self) -> None:
+    return f"domain is {self.domain.upper()}\n IPv4s are: {self.ipv4s}\n Corresponding geo is:\n {self.geo}\n Load test results available at {self.report_link}"
 
 
   def _get_endpoints(self, domain: str) -> list:
@@ -62,7 +63,6 @@ class CompanyInstance():
     results = {}
     for ip in self.ipv4s:
       result= {}
-      # print(ip)
       url = f"http://ipinfo.io/{ip}/json"
       response = urlopen(url)
       data = json.load(response)
@@ -77,18 +77,13 @@ class CompanyInstance():
 
 
   def _load_test(self) -> dict:
-    # subprocess.call('pwd')
+    print("Starting load test")
     spawning_rate = self.args.load_users // 4 if self.args.load_users > 100 else self.args.load_users
-    cmd = f"cd code && DOMAIN={self.domain}  WORKERS=3 TIME={self.args.load_time} USERS={self.args.load_users} RATE={spawning_rate} docker-compose up"
+    cmd = f"cd code && DOMAIN={self.domain} WORKERS=3 TIME={self.args.load_time} USERS={self.args.load_users} RATE={spawning_rate} docker-compose up"
     print(f"DOMAIN NOW {self.domain}. Running load test within \n {cmd=}")
-    test = Popen(cmd,stdout=PIPE, universal_newlines=True, shell=True)
-    for stdout_line in iter(Popen.stdout.readline, ""):
-        yield stdout_line 
-    Popen.stdout.close()
-    exit_code = test.wait()
-    if exit_code:
-      raise CalledProcessError(exit_code)
-    print(f"Finished for {self.domain}, all stats generated to {self.domain}.html report locally")
+    test = call(cmd,stdout=PIPE, universal_newlines=True, shell=True, timeout=self.args.load_time*2)
+    # print('waiting')
+    print(f"Finished for {self.domain} with exit code {test.wait()}, all stats generated to {self.domain}.html report locally")
     self.report_link = f"{os. getcwd()}/{self.domain}.html"
 
 
@@ -96,5 +91,4 @@ if __name__ == "__main__":
   domains = get_domains('exness',10,5)
   for domain in domains:
     instance = CompanyInstance(domain)
-    instance.find_all()
-    print(f"domain is {instance.domain.upper()}\n IPv4s are: {instance.ipv4s}\n Corresponding geo is:\n {instance.geo}\n Load test results available at {instance.report_link}")
+    print(instance)
