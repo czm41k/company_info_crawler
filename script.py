@@ -63,8 +63,10 @@ class CompanyInstance():
         ips.append(str(rdata))
       return ips
     except dns.exception.Timeout as e:
-      print(f"Failed to determine IPs using default ")
+      print(f"Failed to determine IPs using default DNS")
       return None
+    except dns.resolver.NoNameservers as e:
+      print(f"Local DNS is unable to process our resolution request. Try again later")
 
 
   def _get_geo(self) -> Union[dict,None]:
@@ -116,7 +118,7 @@ def execute(cmd):
 def main():
   args = parse_args()
   instances = []
-  domains = get_domains(args.company,args.google_depth,args.google_timeout)
+  domains = get_domains(args.company,100,args.google_timeout)
   for domain in domains:
     instance = CompanyInstance(domain)
     instance.report_link = load_test(domain, args.load_users, args.load_time)

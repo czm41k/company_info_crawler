@@ -30,3 +30,22 @@ Use embeded helper in script to see posible options for parametrization.
 1. EXpose Locust UI if needed
 1. Workaround DNS temporary issues
 1. Deal with inaccessible from test source domains
+
+## Example of response
+
+```shell
+...
+Domain is EXNESS-EX.COM
+ IPv4s are: ['172.67.153.54', '104.21.34.20']
+ Corresponding geo is:
+ {'172.67.153.54': {'org': 'AS13335 Cloudflare, Inc.', 'city': 'San Francisco', 'country': 'US', 'region': 'California'}, '104.21.34.20': {'org': 'AS13335 Cloudflare, Inc.', 'city': 'San Francisco', 'country': 'US', 'region': 'California'}}
+ Load test results available at /Users/czm41k/Documents/projects/exness_sre/exness-ex.com.html
+
+
+Domain is EXNESS.ASIA
+ IPv4s are: ['45.60.78.64', '45.60.133.64']
+ Corresponding geo is:
+ {'45.60.78.64': {'org': 'AS19551 Incapsula Inc', 'city': 'Redwood City', 'country': 'US', 'region': 'California'}, '45.60.133.64': {'org': 'AS19551 Incapsula Inc', 'city': 'Redwood City', 'country': 'US', 'region': 'California'}}
+ Load test results available at /Users/czm41k/Documents/projects/exness_sre/exness.asia.html
+ ...
+```
