@@ -30,8 +30,8 @@ def get_domains(site_name: str, depth: int, pause: int) -> set:
 
 
 def parse_args() -> dict:
+  """Parses provided command line arguments into args dict"""
   parser = argparse.ArgumentParser(description=f"Web crawler. Gather all INFO on provided domain")
-
   parser.add_argument('-c', '--company', action='store', dest='company', type=str, default='exness', help='Name of company to gather info')
   parser.add_argument('-u', action='store', dest='load_users', type=int, default=1000, help='Count of users for Locust load testing')
   parser.add_argument('-t', action='store', dest='load_time', type=int, default=15, help="Time in seconds to run Locust load test")
