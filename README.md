@@ -49,3 +49,7 @@ Domain is EXNESS.ASIA
  Load test results available at /Users/czm41k/Documents/projects/exness_sre/exness.asia.html
  ...
 ```
+
+### Example of Locust report
+
+![locust](/screenshots/locust.png)
