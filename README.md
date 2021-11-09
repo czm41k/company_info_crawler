@@ -24,7 +24,7 @@ Use embeded helper in script to see posible options for parametrization.
 
 `DOMAIN=domain WORKERS=<num of workers>  TIME=<seconds> USERS=<num of users for load testing> RATE=<users spawning rate for load testing> docker-compose up`
 
-## TODO List
+## List of possible improvements
 
 1. Increase performance by implementing async API calls
 1. EXpose Locust UI if needed
