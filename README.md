@@ -29,3 +29,4 @@ Use embeded helper in script to see posible options for parametrization.
 1. Increase performance by implementing async API calls
 1. EXpose Locust UI if needed
 1. Workaround DNS temporary issues
+1. Deal with inaccessible from te
