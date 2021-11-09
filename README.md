@@ -1,6 +1,6 @@
 # Company INFO Crawler
 
-## TLDR
+## TL;DR
 
 Python script that does following:
 1. Google-s provided company name to gather lsit of domains owned by company
@@ -12,13 +12,17 @@ Python script that does following:
 ## Requirements
 
 1. Internet access
-1/ Docker installed
+1. Docker installed
 
-## Possible options
+## Run 
+
+`pip3 install -r requirements.txt && python3 script.py`
+
+### Possible options
 
 Use embeded helper in script to see posible options for parametrization.
 
-> Every option has it's default value, so script can be run jsut by `python3 script.py`
+> Every option has it's default value, so script can be run just by `python3 script.py`
 
 ## Run docker-compose by hand
 
