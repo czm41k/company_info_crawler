@@ -1,0 +1,15 @@
+version: '3'
+services:
+  master:
+    image: locustio/locust
+    volumes:
+      - ./:/mnt/locust
+    command: "-f /mnt/locust/locustfile.py -H https://${DOMAIN} --master --headless -u ${USERS}  -r ${RATE} --run-time ${TIME}s --html=/mnt/locust/$DOMAIN.html"
+
+  worker:
+    deploy:
+      replicas: "${WORKERS}"
+    image: locustio/locust
+    volumes:
+      - ./:/mnt/locust
+    command: "-f /mnt/locust/locustfile.py --worker --master-host master "
